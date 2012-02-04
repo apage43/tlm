@@ -3,8 +3,10 @@ TOPDIR := $(shell pwd)
 PREFIX := $(TOPDIR)/install
 
 COMPONENTS := bucket_engine \
+	couchstore \
 	ep-engine \
 	libconflate \
+	libcouchbase \
 	libvbucket \
 	libmemcached \
 	membase-cli \
@@ -14,6 +16,7 @@ COMPONENTS := bucket_engine \
 	couchdb \
 	couchbase-examples \
 	ns_server \
+	snappy \
 	workload-generator
 
 ifneq "$(DESTDIR)" ""
@@ -176,10 +179,10 @@ libcouchbase_EXTRA_OPTIONS := 'LDFLAGS=-L$(DESTDIR)$(PREFIX)/lib $(LDFLAGS)' \
 deps-for-libcouchbase: make-install-libvbucket make-install-memcached
 
 memcachetest_EXTRA_MAKE_OPTIONS := 'CPPFLAGS=-I$(TOPDIR)/memcached/include -I$(TOPDIR)/libmemcached -I$(TOPDIR)/libvbucket/include -I$(PREFIX)/include $(CPPFLAGS)'
-deps-for-memcachetest: make-install-memcached make-install-libmemcached make-install-libvbucket
+deps-for-memcachetest: make-install-memcached make-install-libmemcached make-install-libvbucket make-install-libcouchbase
 
 ep-engine_OPTIONS := --with-memcached=../memcached $(WITH_DEBUG_FLAG)
-deps-for-ep-engine: make-install-memcached
+deps-for-ep-engine: make-install-memcached make-install-couchstore
 
 bucket_engine_OPTIONS := --with-memcached=../memcached $(WITH_DEBUG_FLAG)
 bucket-engine_EXTRA_MAKE_OPTIONS := 'CPPFLAGS=-I$(TOPDIR)/memcached/include $(CPPFLAGS)'
@@ -193,6 +196,9 @@ ifndef CROSS_COMPILING
 moxi_OPTIONS += --with-memcached=$(DESTDIR)$(PREFIX)/bin/memcached
 endif
 deps-for-moxi: make-install-libconflate make-install-libvbucket make-install-libmemcached make-install-memcached
+
+deps-for-couchstore: make-install-snappy
+couchstore_OPTIONS := CFLAGS='-I$(PREFIX)/include' CPPFLAGS='-I$(PREFIX)/include' LDFLAGS='-L$(PREFIX)/lib'
 
 libconflate_OPTIONS := $(LIBRARY_OPTIONS) --without-check $(WITH_DEBUG_FLAG)
 
